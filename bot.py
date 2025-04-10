@@ -1,15 +1,19 @@
 import os
 import telebot
+from pymongo import MongoClient
 
 # Get token from environment
 TOKEN = os.getenv("BOT_TOKEN")  # Bot token from Railway variables
 bot = telebot.TeleBot(TOKEN)
 
+# MongoDB URI and client setup
+uri = "mongodb+srv://Bilalhussain1236597:Bilalhussain2211@cluster0.twqxhc4.mongodb.net/gamesDB?retryWrites=true&w=majority"
+client = MongoClient(uri)
+db = client['gamesDB']
+games_collection = db['games']
+
 # Admin ID
 ADMIN_ID = 5806222268
-
-# Game data dictionary with categories
-games = {}
 
 # /start command
 @bot.message_handler(commands=['start'])
@@ -29,10 +33,9 @@ def send_welcome(message):
     
     Let's find your next favorite game! 🎮
     """
-    
     bot.reply_to(message, welcome_message)
 
-# Multi-line /add_game handler
+# /add_game command handler
 @bot.message_handler(commands=['add_game'])
 def add_game(message):
     if message.from_user.id != ADMIN_ID:
@@ -63,27 +66,32 @@ def add_game(message):
             bot.reply_to(message, "❌ Invalid format. Please use this format:\n\n/add_game\nGame Name:- Name\nDownload Here:- link\nShort Intro:- description\nCategory:- category1, category2, category3")
             return
 
-        games[name] = {
+        # Insert data into MongoDB
+        game_data = {
+            "name": name,
             "link": link,
             "description": description,
             "category": category
         }
+        games_collection.insert_one(game_data)
 
         bot.reply_to(message, f"✅ Game '{name.title()}' added successfully under categories: {', '.join(category).title()}!")
 
     except Exception as e:
         bot.reply_to(message, f"❌ Error: {str(e)}")
 
-# /games command
+# /games command to show games
 @bot.message_handler(commands=['games'])
 def show_games(message):
-    if not games:
+    games = games_collection.find()
+
+    if games.count() == 0:
         bot.reply_to(message, "❌ No games added yet.")
         return
 
     game_list = "📋 Available Games:\n"
-    for game_name in games:
-        game_list += f"- {game_name.title()} ({', '.join(games[game_name]['category']).title()})\n"
+    for game in games:
+        game_list += f"- {game['name'].title()} ({', '.join(game['category']).title()})\n"
 
     bot.reply_to(message, game_list)
 
@@ -92,35 +100,25 @@ def show_games(message):
 def handle_input(message):
     text = message.text.strip().lower()
 
-    matching_by_category = [name for name, data in games.items() if any(text in cat for cat in data["category"])]
+    # Searching by category
+    matching_by_category = games_collection.find({"category": {"$in": [text]}})
 
-    if matching_by_category:
+    if matching_by_category.count() > 0:
         response = f"📂 Games in '{text.title()}' category:\n"
-        for game_name in matching_by_category:
-            g = games[game_name]
-            response += f"\n🎮 {game_name.title()}\n{g['description']}\n🔗 {g['link']}\n"
+        for game in matching_by_category:
+            response += f"\n🎮 {game['name'].title()}\n{game['description']}\n🔗 {game['link']}\n"
         bot.send_message(message.chat.id, response)
         return
 
-    if " games" in text:
-        category_name = text.replace(" games", "")
-        matching_by_category = [name for name, data in games.items() if category_name in data["category"]]
+    # Searching by game name
+    matching_by_name = games_collection.find({"name": {"$regex": text, "$options": "i"}})
 
-        if matching_by_category:
-            response = f"📂 Games in '{category_name.title()}' category:\n"
-            for game_name in matching_by_category:
-                g = games[game_name]
-                response += f"\n🎮 {game_name.title()}\n{g['description']}\n🔗 {g['link']}\n"
-            bot.send_message(message.chat.id, response)
-            return
-
-    for game_name, game_data in games.items():
-        if text in game_name:
-            bot.send_message(
-                message.chat.id,
-                f"🎮 {game_name.title()}\n\n{game_data['description']}\n\n🔗 Download Link:\n{game_data['link']}"
-            )
-            return
+    if matching_by_name.count() > 0:
+        response = ""
+        for game in matching_by_name:
+            response += f"🎮 {game['name'].title()}\n\n{game['description']}\n\n🔗 Download Link:\n{game['link']}\n\n"
+        bot.send_message(message.chat.id, response)
+        return
 
     bot.reply_to(message, "❌ No game or category found. Try another name or category.")
 
