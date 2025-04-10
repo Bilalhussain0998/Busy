@@ -14,7 +14,23 @@ games = {}
 # /start command
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, "👋 Welcome! Send me a game name or category (e.g. 'simulation games') and I’ll give you details.")
+    welcome_message = """
+    👋 Welcome to the GameBot!
+
+    🚀 Here you can easily search and discover new games.
+
+    🔍 **How to use:**
+    - Send me a game name or category (e.g. **'racing games'**, **'action games'**).
+    - I’ll give you details about the game including a download link.
+
+    💬 **Commands:**
+    - **/games** – To see a list of available games.
+    - **/add_game** – To add a new game (Admin Only).
+    
+    Let's find your next favorite game! 🎮
+    """
+    
+    bot.reply_to(message, welcome_message)
 
 # Multi-line /add_game handler
 @bot.message_handler(commands=['add_game'])
