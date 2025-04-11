@@ -1,0 +1,19 @@
+[
+    {
+        "name": "CarX Drift Racing 3",
+        "link": "http://taptap.io/app/33775808",
+        "description": "CarX Drift Racing 3 is the long-awaited sequel in the legendary game series from developer CarX Technologies. Assemble your very own unique drift car from scratch and compete in tandem races with players all over the world!
+ATTENTION! This game can occupy you for hours. Don’t forget to take breaks every 40 minutes!.",
+        "category": ["racing", "action", "adventure"],
+        "downloads": 0,
+        "last_downloaded": ""
+    },
+    {
+        "name": "Grand Gangster War",
+        "link": "https://www.taptap.io/app/33749187",
+        "description": "Get ready to hit the road in the most immersive and realistic truck simulator! In Global Truck Online, you will drive powerful trucks on a detailed map inspired by Brazilian roads..",
+        "category": ["zombie", "survival", "action"],
+        "downloads": 10,
+        "last_downloaded": "2025-04-10"
+    }
+]
