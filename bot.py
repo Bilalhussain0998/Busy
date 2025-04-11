@@ -2,15 +2,26 @@ import os
 import telebot
 from pymongo import MongoClient
 
+# Debugging to check Railway Startup
+print("🚀 Bot is starting...")
+
 # Get token from environment
 TOKEN = os.getenv("BOT_TOKEN")  # Bot token from Railway variables
+if not TOKEN:
+    raise Exception("❌ BOT_TOKEN environment variable not set!")
+
 bot = telebot.TeleBot(TOKEN)
 
 # MongoDB URI and client setup
 uri = "mongodb+srv://Bilalhussain1236597:Bilalhussain2211@cluster0.twqxhc4.mongodb.net/gamesDB?retryWrites=true&w=majority"
-client = MongoClient(uri)
-db = client['gamesDB']
-games_collection = db['games']
+try:
+    client = MongoClient(uri)
+    db = client['gamesDB']
+    games_collection = db['games']
+    print("✅ MongoDB Connected")
+except Exception as e:
+    print("❌ MongoDB connection error:", e)
+    raise e
 
 # Admin ID
 ADMIN_ID = 5806222268
@@ -30,7 +41,7 @@ def send_welcome(message):
     💬 **Commands:**
     - **/games** – To see a list of available games.
     - **/add_game** – To add a new game (Admin Only).
-    
+
     Let's find your next favorite game! 🎮
     """
     bot.reply_to(message, welcome_message)
@@ -122,4 +133,5 @@ def handle_input(message):
 
     bot.reply_to(message, "❌ No game or category found. Try another name or category.")
 
-bot.polling()
+print("✅ Bot Started")
+bot.polling(none_stop=True)
